@@ -12,24 +12,22 @@
     <button id="back-btn" class="btn back-btn">&larr; Back</button>
     <h1 id="project-name">Sandbox</h1>
     <div class="top-actions">
+      <button id="pan-btn" class="btn pan-btn" title="Pan / move around" aria-label="Pan">&#9995;</button>
       <button id="complete-btn" class="btn primary">Complete</button>
       <button id="help-btn" class="help-btn" title="Help" aria-label="Help">?</button>
     </div>
   </header>
 
-  <main class="workspace">
-    <canvas id="pixel-canvas" width="480" height="480"></canvas>
+  <main class="workspace" id="workspace">
+    <div class="canvas-viewport" id="canvas-viewport">
+      <canvas id="pixel-canvas" width="480" height="480"></canvas>
+    </div>
   </main>
 
   <footer class="color-tray" id="color-tray">
     <button id="add-color-btn" class="color-circle add-circle" title="Add a color" aria-label="Add a color">+</button>
+    <input type="color" id="color-picker" class="visually-hidden" value="#3aa7ff">
   </footer>
-
-  <!-- Floating color selector box with a confirm checkmark -->
-  <div id="color-selector-box" class="selector-box hidden">
-    <input type="color" id="box-color-picker" class="box-picker" value="#3aa7ff" aria-label="Pick a color">
-    <button id="box-confirm-btn" class="confirm-btn" title="Add color" aria-label="Add color">&#10003;</button>
-  </div>
 
   <!-- Color options overlay (appears when a color circle is held) -->
   <div id="color-menu-overlay" class="overlay hidden">
