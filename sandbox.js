@@ -140,6 +140,7 @@ let zoom = 1;
 let panX = 0;
 let panY = 0;
 let panMode = false;
+let rightPanning = false;
 
 function applyTransform() {
   canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
@@ -183,6 +184,10 @@ function dist(a, b) {
 
 viewport.addEventListener('pointerdown', (e) => {
   activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (e.pointerType === 'mouse' && e.button === 2) {
+    rightPanning = true;
+    viewport.setPointerCapture(e.pointerId);
+  }
   const pts = pointersArr();
   if (pts.length === 2) {
     isPainting = false;
@@ -207,8 +212,8 @@ viewport.addEventListener('pointermove', (e) => {
     if (pinchDist > 0) zoomAt(mid.x, mid.y, zoom * (nd / pinchDist));
     else applyTransform();
     pinchDist = nd;
-  } else if (panMode || zoom > 1) {
-    // One finger / mouse drag to move around (when zoomed or pan mode on)
+  } else if (panMode || rightPanning) {
+    // Pan only via the pan button or right-click drag; a single touch/stylus paints
     panX += e.clientX - prev.x;
     panY += e.clientY - prev.y;
     applyTransform();
@@ -217,14 +222,16 @@ viewport.addEventListener('pointermove', (e) => {
 
 function endViewportPointer(e) {
   activePointers.delete(e.pointerId);
+  if (e.pointerType === 'mouse' && e.button === 2) rightPanning = false;
   if (pointersArr().length < 2) pinchDist = 0;
 }
+viewport.addEventListener('contextmenu', (e) => e.preventDefault());
 viewport.addEventListener('pointerup', endViewportPointer);
 viewport.addEventListener('pointercancel', endViewportPointer);
 
 // Paint only with a single pointer while not panning
 canvas.addEventListener('pointerdown', (e) => {
-  if (panMode || activePointers.size > 1) return;
+  if (panMode || rightPanning || e.button === 2 || activePointers.size > 1) return;
   e.preventDefault();
   isPainting = true;
   paintFromEvent(e);
@@ -578,7 +585,7 @@ const completeSaveBtn = document.getElementById('complete-save-btn');
 const completeDeleteBtn = document.getElementById('complete-delete-btn');
 const completeCancelBtn = document.getElementById('complete-cancel-btn');
 
-// Numbered projects complete automatically Ã¢â‚¬â€ no manual Complete button
+// Numbered projects complete automatically ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â no manual Complete button
 if (numberedMode) completeBtn.classList.add('hidden');
 
 function renderExportPng() {
