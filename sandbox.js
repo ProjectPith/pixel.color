@@ -133,15 +133,104 @@ function paintFromEvent(e) {
   drawCanvas();
 }
 
-// Pointer Events cover mouse, touch, and pen in one code path
-canvas.addEventListener('pointerdown', (e) => {
+// ---------- Zoom & pan ----------
+const viewport = document.getElementById('canvas-viewport');
+const panBtn = document.getElementById('pan-btn');
+let zoom = 1;
+let panX = 0;
+let panY = 0;
+let panMode = false;
+
+function applyTransform() {
+  canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+}
+
+function zoomAt(cx, cy, next) {
+  const prev = zoom;
+  zoom = Math.min(8, Math.max(1, next));
+  const ratio = zoom / prev;
+  panX = cx - (cx - panX) * ratio;
+  panY = cy - (cy - panY) * ratio;
+  if (zoom === 1) {
+    panX = 0;
+    panY = 0;
+  }
+  applyTransform();
+}
+
+panBtn.addEventListener('click', () => {
+  panMode = !panMode;
+  panBtn.classList.toggle('active', panMode);
+});
+
+// Mouse wheel zoom (desktop)
+viewport.addEventListener('wheel', (e) => {
   e.preventDefault();
-  canvas.setPointerCapture(e.pointerId);
+  zoomAt(e.clientX, e.clientY, zoom * (e.deltaY < 0 ? 1.2 : 1 / 1.2));
+}, { passive: false });
+
+// Track active pointers for pinch/pan
+const activePointers = new Map();
+let pinchDist = 0;
+
+function pointersArr() {
+  return [...activePointers.values()];
+}
+
+function dist(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+viewport.addEventListener('pointerdown', (e) => {
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const pts = pointersArr();
+  if (pts.length === 2) {
+    isPainting = false;
+    pinchDist = dist(pts[0], pts[1]);
+    viewport.setPointerCapture(e.pointerId);
+  }
+});
+
+viewport.addEventListener('pointermove', (e) => {
+  if (!activePointers.has(e.pointerId)) return;
+  const prev = activePointers.get(e.pointerId);
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const pts = pointersArr();
+
+  if (pts.length === 2) {
+    // Pinch to zoom + move with the midpoint
+    const nd = dist(pts[0], pts[1]);
+    const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    const prevMid = { x: mid.x - ((e.clientX - prev.x) / 2), y: mid.y - ((e.clientY - prev.y) / 2) };
+    panX += mid.x - prevMid.x;
+    panY += mid.y - prevMid.y;
+    if (pinchDist > 0) zoomAt(mid.x, mid.y, zoom * (nd / pinchDist));
+    else applyTransform();
+    pinchDist = nd;
+  } else if (panMode || zoom > 1) {
+    // One finger / mouse drag to move around (when zoomed or pan mode on)
+    panX += e.clientX - prev.x;
+    panY += e.clientY - prev.y;
+    applyTransform();
+  }
+});
+
+function endViewportPointer(e) {
+  activePointers.delete(e.pointerId);
+  if (pointersArr().length < 2) pinchDist = 0;
+}
+viewport.addEventListener('pointerup', endViewportPointer);
+viewport.addEventListener('pointercancel', endViewportPointer);
+
+// Paint only with a single pointer while not panning
+canvas.addEventListener('pointerdown', (e) => {
+  if (panMode || activePointers.size > 1) return;
+  e.preventDefault();
   isPainting = true;
   paintFromEvent(e);
 });
 canvas.addEventListener('pointermove', (e) => {
-  if (isPainting) paintFromEvent(e);
+  if (isPainting && !panMode && activePointers.size <= 1) paintFromEvent(e);
 });
 window.addEventListener('pointerup', () => {
   if (isPainting) {
@@ -159,44 +248,12 @@ const tray = document.getElementById('color-tray');
 const addBtn = document.getElementById('add-color-btn');
 const picker = document.getElementById('color-picker');
 
-addBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  openSelectorBox();
-});
+addBtn.addEventListener('click', () => picker.click());
 
-// ---------- Floating color selector box ----------
-const selectorBox = document.getElementById('color-selector-box');
-const boxPicker = document.getElementById('box-color-picker');
-const boxConfirmBtn = document.getElementById('box-confirm-btn');
-let selectorBoxOpen = false;
-
-function openSelectorBox() {
-  boxPicker.value = '#3aa7ff';
-  selectorBox.classList.remove('hidden');
-  selectorBoxOpen = true;
-}
-
-function closeSelectorBox() {
-  selectorBox.classList.add('hidden');
-  selectorBoxOpen = false;
-}
-
-function commitBoxColor() {
-  addColor(boxPicker.value);
+// Full shade picker (no presets) — choosing a color adds it straight to the tray
+picker.addEventListener('change', () => {
+  addColor(picker.value);
   saveProject();
-}
-
-// Checkmark: add the color and keep the box open for picking another
-boxConfirmBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  commitBoxColor();
-});
-
-// Clicking anywhere off the box just closes it without saving the color
-document.addEventListener('click', (e) => {
-  if (!selectorBoxOpen) return;
-  if (selectorBox.contains(e.target)) return;
-  closeSelectorBox();
 });
 
 function addColor(color, select = true) {
