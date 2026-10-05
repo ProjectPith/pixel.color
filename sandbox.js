@@ -252,7 +252,6 @@ const pickerOverlay = document.getElementById('shade-picker-overlay');
 const pickerTitle = document.getElementById('picker-title');
 const svArea = document.getElementById('sv-area');
 const svCursor = document.getElementById('sv-cursor');
-const hueSlider = document.getElementById('hue-slider');
 const pickerPreview = document.getElementById('picker-preview');
 const pickerHex = document.getElementById('picker-hex');
 const pickerOk = document.getElementById('picker-ok');
@@ -293,12 +292,23 @@ function hexToHsv(hexStr) {
   return { h, s: max === 0 ? 0 : d / max, v: max };
 }
 
+// Single gradient box: x = hue, y = white (top) -> pure color (middle) -> black (bottom)
+let boxPos = { x: 0.58, y: 0.2 };
+
+function posToHsv(x, y) {
+  return y < 0.5
+    ? { h: x * 360, s: y * 2, v: 1 }
+    : { h: x * 360, s: 1, v: 1 - (y - 0.5) * 2 };
+}
+
+function hsvToPos(c) {
+  return { x: Math.min(1, c.h / 360), y: c.v < 1 ? 0.5 + (1 - c.v) / 2 : c.s / 2 };
+}
+
 function renderPicker() {
   const hex = hsvToHex(hsv.h, hsv.s, hsv.v);
-  const pureHue = hsvToHex(hsv.h, 1, 1);
-  svArea.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${pureHue})`;
-  svCursor.style.left = `${hsv.s * 100}%`;
-  svCursor.style.top = `${(1 - hsv.v) * 100}%`;
+  svCursor.style.left = `${boxPos.x * 100}%`;
+  svCursor.style.top = `${boxPos.y * 100}%`;
   svCursor.style.background = hex;
   pickerPreview.style.backgroundColor = hex;
   if (document.activeElement !== pickerHex) pickerHex.value = hex;
@@ -306,9 +316,8 @@ function renderPicker() {
 
 function openShadePicker(title, initialHex, onDone) {
   pickerTitle.textContent = title;
-  const parsed = hexToHsv(initialHex);
-  hsv = parsed || { h: 210, s: 0.72, v: 1 };
-  hueSlider.value = hsv.h;
+  hsv = hexToHsv(initialHex) || { h: 210, s: 0.72, v: 1 };
+  boxPos = hsvToPos(hsv);
   pickerCallback = onDone;
   renderPicker();
   pickerOverlay.classList.remove('hidden');
@@ -319,11 +328,13 @@ function closeShadePicker() {
   pickerCallback = null;
 }
 
-// Saturation / value area (drag or tap)
-function svFromEvent(e) {
+function boxFromEvent(e) {
   const rect = svArea.getBoundingClientRect();
-  hsv.s = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-  hsv.v = 1 - Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+  boxPos = {
+    x: Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)),
+    y: Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height)),
+  };
+  hsv = posToHsv(boxPos.x, boxPos.y);
   renderPicker();
 }
 
@@ -331,24 +342,18 @@ let svDragging = false;
 svArea.addEventListener('pointerdown', (e) => {
   svDragging = true;
   svArea.setPointerCapture(e.pointerId);
-  svFromEvent(e);
+  boxFromEvent(e);
 });
 svArea.addEventListener('pointermove', (e) => {
-  if (svDragging) svFromEvent(e);
+  if (svDragging) boxFromEvent(e);
 });
 svArea.addEventListener('pointerup', () => { svDragging = false; });
 svArea.addEventListener('pointercancel', () => { svDragging = false; });
-
-hueSlider.addEventListener('input', () => {
-  hsv.h = Number(hueSlider.value);
-  renderPicker();
-});
-
 pickerHex.addEventListener('input', () => {
   const parsed = hexToHsv(pickerHex.value);
   if (parsed) {
     hsv = parsed;
-    hueSlider.value = hsv.h;
+    boxPos = hsvToPos(hsv);
     renderPicker();
   }
 });
@@ -573,7 +578,7 @@ const completeSaveBtn = document.getElementById('complete-save-btn');
 const completeDeleteBtn = document.getElementById('complete-delete-btn');
 const completeCancelBtn = document.getElementById('complete-cancel-btn');
 
-// Numbered projects complete automatically — no manual Complete button
+// Numbered projects complete automatically Ã¢â‚¬â€ no manual Complete button
 if (numberedMode) completeBtn.classList.add('hidden');
 
 function renderExportPng() {
@@ -631,4 +636,3 @@ completeCancelBtn.addEventListener('click', closeCompleteOverlay);
 completeOverlay.addEventListener('click', (e) => {
   if (e.target === completeOverlay) closeCompleteOverlay();
 });
--
