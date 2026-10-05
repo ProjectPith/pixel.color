@@ -246,14 +246,131 @@ canvas.addEventListener('pointercancel', () => {
 // ---------- Color tray ----------
 const tray = document.getElementById('color-tray');
 const addBtn = document.getElementById('add-color-btn');
-const picker = document.getElementById('color-picker');
 
-addBtn.addEventListener('click', () => picker.click());
+// ---------- Custom shade picker (no presets) ----------
+const pickerOverlay = document.getElementById('shade-picker-overlay');
+const pickerTitle = document.getElementById('picker-title');
+const svArea = document.getElementById('sv-area');
+const svCursor = document.getElementById('sv-cursor');
+const hueSlider = document.getElementById('hue-slider');
+const pickerPreview = document.getElementById('picker-preview');
+const pickerHex = document.getElementById('picker-hex');
+const pickerOk = document.getElementById('picker-ok');
+const pickerCancel = document.getElementById('picker-cancel');
 
-// Full shade picker (no presets) — choosing a color adds it straight to the tray
-picker.addEventListener('change', () => {
-  addColor(picker.value);
-  saveProject();
+let pickerCallback = null;
+let hsv = { h: 210, s: 0.72, v: 1 };
+
+function hsvToHex(h, s, v) {
+  const c = v * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = v - c;
+  let [r, g, b] =
+    h < 60 ? [c, x, 0] :
+    h < 120 ? [x, c, 0] :
+    h < 180 ? [0, c, x] :
+    h < 240 ? [0, x, c] :
+    h < 300 ? [x, 0, c] : [c, 0, x];
+  return '#' + [r, g, b].map((n) => Math.round((n + m) * 255).toString(16).padStart(2, '0')).join('');
+}
+
+function hexToHsv(hexStr) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hexStr.trim());
+  if (!m) return null;
+  const r = parseInt(m[1].slice(0, 2), 16) / 255;
+  const g = parseInt(m[1].slice(2, 4), 16) / 255;
+  const b = parseInt(m[1].slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  if (d) {
+    if (max === r) h = 60 * (((g - b) / d) % 6);
+    else if (max === g) h = 60 * ((b - r) / d + 2);
+    else h = 60 * ((r - g) / d + 4);
+  }
+  if (h < 0) h += 360;
+  return { h, s: max === 0 ? 0 : d / max, v: max };
+}
+
+function renderPicker() {
+  const hex = hsvToHex(hsv.h, hsv.s, hsv.v);
+  const pureHue = hsvToHex(hsv.h, 1, 1);
+  svArea.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${pureHue})`;
+  svCursor.style.left = `${hsv.s * 100}%`;
+  svCursor.style.top = `${(1 - hsv.v) * 100}%`;
+  svCursor.style.background = hex;
+  pickerPreview.style.backgroundColor = hex;
+  if (document.activeElement !== pickerHex) pickerHex.value = hex;
+}
+
+function openShadePicker(title, initialHex, onDone) {
+  pickerTitle.textContent = title;
+  const parsed = hexToHsv(initialHex);
+  hsv = parsed || { h: 210, s: 0.72, v: 1 };
+  hueSlider.value = hsv.h;
+  pickerCallback = onDone;
+  renderPicker();
+  pickerOverlay.classList.remove('hidden');
+}
+
+function closeShadePicker() {
+  pickerOverlay.classList.add('hidden');
+  pickerCallback = null;
+}
+
+// Saturation / value area (drag or tap)
+function svFromEvent(e) {
+  const rect = svArea.getBoundingClientRect();
+  hsv.s = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+  hsv.v = 1 - Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+  renderPicker();
+}
+
+let svDragging = false;
+svArea.addEventListener('pointerdown', (e) => {
+  svDragging = true;
+  svArea.setPointerCapture(e.pointerId);
+  svFromEvent(e);
+});
+svArea.addEventListener('pointermove', (e) => {
+  if (svDragging) svFromEvent(e);
+});
+svArea.addEventListener('pointerup', () => { svDragging = false; });
+svArea.addEventListener('pointercancel', () => { svDragging = false; });
+
+hueSlider.addEventListener('input', () => {
+  hsv.h = Number(hueSlider.value);
+  renderPicker();
+});
+
+pickerHex.addEventListener('input', () => {
+  const parsed = hexToHsv(pickerHex.value);
+  if (parsed) {
+    hsv = parsed;
+    hueSlider.value = hsv.h;
+    renderPicker();
+  }
+});
+
+pickerOk.addEventListener('click', () => {
+  const hex = hsvToHex(hsv.h, hsv.s, hsv.v);
+  const cb = pickerCallback;
+  closeShadePicker();
+  if (cb) cb(hex);
+});
+
+pickerCancel.addEventListener('click', closeShadePicker);
+pickerOverlay.addEventListener('click', (e) => {
+  if (e.target === pickerOverlay) closeShadePicker();
+});
+
+// "+" opens the shade picker; the chosen color is added to the tray
+addBtn.addEventListener('click', () => {
+  openShadePicker('Add a color', '#3aa7ff', (hex) => {
+    addColor(hex);
+    saveProject();
+  });
 });
 
 function addColor(color, select = true) {
@@ -369,7 +486,6 @@ const menuColorValue = document.getElementById('menu-color-value');
 const changeBtn = document.getElementById('change-color-btn');
 const deleteBtn = document.getElementById('delete-color-btn');
 const closeMenuBtn = document.getElementById('close-color-menu');
-const editPicker = document.getElementById('edit-picker');
 
 let menuTarget = null;
 
@@ -394,17 +510,11 @@ menuOverlay.addEventListener('click', (e) => {
 changeBtn.addEventListener('click', () => {
   if (numberedMode) return; // palette is fixed in numbered mode
   if (!menuTarget) return;
-  editPicker.value = menuTarget.dataset.color;
-  editPicker.click();
-});
+  const target = menuTarget;
+  openShadePicker('Change color', target.dataset.color, (newColor) => {
+    const oldColor = target.dataset.color;
+    if (newColor === oldColor) return;
 
-editPicker.addEventListener('change', () => {
-  if (!menuTarget) return;
-
-  const oldColor = menuTarget.dataset.color;
-  const newColor = editPicker.value;
-
-  if (newColor !== oldColor) {
     for (const [key, value] of pixels) {
       if (value === oldColor) pixels.set(key, newColor);
     }
@@ -412,21 +522,20 @@ editPicker.addEventListener('change', () => {
     // If the new color already has a circle, merge into it
     const existing = tray.querySelector(`.color-circle[data-color="${newColor}"]`);
     if (existing) {
-      const wasSelected = menuTarget.classList.contains('selected');
-      menuTarget.remove();
+      const wasSelected = target.classList.contains('selected');
+      target.remove();
       if (wasSelected) selectColor(existing);
     } else {
-      menuTarget.dataset.color = newColor;
-      menuTarget.style.backgroundColor = newColor;
-      menuTarget.title = newColor;
-      menuTarget.setAttribute('aria-label', `Color ${newColor}`);
+      target.dataset.color = newColor;
+      target.style.backgroundColor = newColor;
+      target.title = newColor;
+      target.setAttribute('aria-label', `Color ${newColor}`);
       if (activeColor === oldColor) activeColor = newColor;
     }
 
     drawCanvas();
     saveProject();
-  }
-
+  });
   closeColorMenu();
 });
 
@@ -522,3 +631,4 @@ completeCancelBtn.addEventListener('click', closeCompleteOverlay);
 completeOverlay.addEventListener('click', (e) => {
   if (e.target === completeOverlay) closeCompleteOverlay();
 });
+-
