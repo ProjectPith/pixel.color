@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Color — Projects</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="help.css">
+</head>
+<body>
+  <header class="top-bar">
+    <h1>Pixel Color</h1>
+    <div class="top-actions">
+      <button id="delete-selected-btn" class="btn danger hidden" title="Delete selected">&#128465; 0</button>
+      <button id="select-all-btn" class="btn hidden">Select all</button>
+      <button id="select-toggle-btn" class="btn">Select</button>
+      <button id="help-btn" class="help-btn" title="Help" aria-label="Help">?</button>
+    </div>
+  </header>
+
+  <main class="project-grid" id="project-grid">
+    <button id="new-project-btn" class="project-card new-card" aria-label="Create new sandbox">
+      <span class="new-card-plus">+</span>
+      <span class="new-card-label">New sandbox</span>
+    </button>
+    <button id="upload-project-btn" class="project-card new-card" aria-label="Create from picture">
+      <span class="new-card-plus">&#8689;</span>
+      <span class="new-card-label">From picture</span>
+    </button>
+  </main>
+
+  <!-- New sandbox overlay -->
+  <div id="new-project-overlay" class="overlay hidden">
+    <div class="modal">
+      <h2>New sandbox</h2>
+
+      <p class="modal-label">Name <span class="optional">(optional)</span></p>
+      <input type="text" id="new-name-input" class="text-input" placeholder="Untitled" maxlength="60">
+
+      <p class="modal-label">Grid size</p>
+      <div class="size-chips" id="size-chips">
+        <button class="chip" data-size="8">8 × 8</button>
+        <button class="chip" data-size="16">16 × 16</button>
+        <button class="chip selected" data-size="24">24 × 24</button>
+        <button class="chip" data-size="32">32 × 32</button>
+        <button class="chip" data-size="48">48 × 48</button>
+      </div>
+
+      <p class="modal-label">Starting colors <span class="optional">(optional — click a color to remove it)</span></p>
+      <div class="mini-tray" id="setup-tray">
+        <button id="setup-add-color" class="color-circle add-circle" aria-label="Add a color">+</button>
+        <input type="color" id="setup-picker" class="visually-hidden" value="#3aa7ff">
+      </div>
+
+      <div class="modal-actions">
+        <button id="cancel-new-project" class="btn">Cancel</button>
+        <button id="create-project" class="btn primary">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload picture overlay -->
+  <div id="upload-overlay" class="overlay hidden">
+    <div class="modal">
+      <h2>Create from picture</h2>
+
+      <div class="upload-drop" id="upload-drop">
+        <p>Click to choose an image</p>
+        <img id="upload-preview" class="hidden pixelated" alt="Preview">
+      </div>
+      <input type="file" id="upload-input" accept="image/*" class="visually-hidden">
+
+      <p class="modal-label">Name <span class="optional">(optional)</span></p>
+      <input type="text" id="upload-name-input" class="text-input" placeholder="Untitled" maxlength="60">
+
+      <p class="modal-label">Grid size</p>
+      <div class="size-chips" id="upload-size-chips">
+        <button class="chip" data-size="8">8 × 8</button>
+        <button class="chip" data-size="16">16 × 16</button>
+        <button class="chip selected" data-size="24">24 × 24</button>
+        <button class="chip" data-size="32">32 × 32</button>
+        <button class="chip" data-size="48">48 × 48</button>
+      </div>
+
+      <p class="modal-label">Number of colors</p>
+      <select id="color-count-select" class="select"></select>
+
+      <div class="modal-actions">
+        <button id="cancel-upload" class="btn">Cancel</button>
+        <button id="create-upload" class="btn primary" disabled>Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project rename/delete overlay -->
+  <div id="project-edit-overlay" class="overlay hidden">
+    <div class="modal">
+      <h2>Edit project</h2>
+      <p class="modal-label">Name</p>
+      <input type="text" id="edit-name-input" class="text-input" maxlength="60">
+      <div class="modal-actions">
+        <button id="edit-delete-btn" class="btn danger">Delete</button>
+        <button id="edit-cancel-btn" class="btn">Cancel</button>
+        <button id="edit-save-btn" class="btn primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="help.js"></script>
+  <script src="home.js"></script>
+</body>
+</html>

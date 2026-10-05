@@ -1,0 +1,542 @@
+* {
+  box-sizing: border-box;
+}
+
+.hidden {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  color: #eeeeee;
+  font-family: system-ui, sans-serif;
+}
+
+/* ---------- Top bar ---------- */
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: #2a2a2a;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.top-bar h1 {
+  font-size: 18px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.top-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  background: #3a3a3a;
+  color: #eeeeee;
+  border: 1px solid #4a4a4a;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #4a4a4a;
+}
+
+.btn.primary {
+  background: #3aa7ff;
+  border-color: #3aa7ff;
+  color: #0b1c2b;
+  font-weight: 600;
+}
+
+.btn.primary:hover {
+  background: #63bdff;
+}
+
+.btn.danger {
+  background: #a33333;
+  border-color: #cc4444;
+  color: #ffffff;
+}
+
+.btn.danger:hover {
+  background: #cc4444;
+}
+
+/* ---------- Homepage project grid ---------- */
+.project-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 16px;
+  padding: 20px;
+  align-content: start;
+}
+
+.project-card {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: #eeeeee;
+  font: inherit;
+  transition: transform 0.1s ease, border-color 0.1s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-2px);
+  border-color: #555555;
+}
+
+.project-card.selected {
+  border-color: #3aa7ff;
+  box-shadow: 0 0 0 3px rgba(58, 167, 255, 0.4);
+}
+
+.project-grid.select-mode .project-card[data-id] {
+  cursor: default;
+}
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: #ffffff;
+  image-rendering: pixelated;
+}
+
+.card-label {
+  font-size: 13px;
+  color: #bbbbbb;
+}
+
+/* The "+" square for creating a sandbox */
+.new-card {
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  background: transparent;
+  justify-content: center;
+  min-height: 190px;
+}
+
+.new-card:hover {
+  border-color: #ffffff;
+}
+
+.new-card-plus {
+  font-size: 48px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.new-card-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---------- Sandbox workspace ---------- */
+.workspace {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#pixel-canvas {
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  cursor: crosshair;
+  touch-action: none;
+  width: min(100%, calc(100vh - 260px));
+  max-width: 640px;
+  height: auto;
+}
+
+/* ---------- Color tray ---------- */
+.color-tray {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #2a2a2a;
+  border-top: 1px solid #3a3a3a;
+  min-height: 72px;
+  overflow-x: auto;
+}
+
+.color-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.color-circle:hover {
+  transform: scale(1.1);
+}
+
+.color-circle.selected {
+  box-shadow: 0 0 0 3px #ffffff;
+}
+
+/* Completed color in numbered mode: darkened and disabled */
+.color-circle.done {
+  opacity: 0.3;
+  filter: grayscale(0.6) brightness(0.6);
+  cursor: not-allowed;
+}
+
+.color-circle.done:hover {
+  transform: none;
+}
+
+/* The "+" circle */
+.add-circle {
+  background: transparent;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 24px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-circle:hover {
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+/* ---------- Floating color selector box ---------- */
+.selector-box {
+  position: fixed;
+  bottom: 84px;
+  left: 24px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #2a2a2a;
+  border: 1px solid #4a4a4a;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.selector-box.hidden {
+  display: none;
+}
+
+.box-picker {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.confirm-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #4a4a4a;
+  cursor: pointer;
+  font-size: 17px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2e7d32;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.confirm-btn:hover {
+  background: #3aa344;
+}
+
+/* ---------- Overlays & modals ---------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.modal {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+  padding: 24px;
+  width: min(400px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.modal-label {
+  margin: 12px 0 4px;
+  font-size: 13px;
+  color: #bbbbbb;
+}
+
+.optional {
+  color: #777777;
+}
+
+.size-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  background: #1e1e1e;
+  color: #cccccc;
+  border: 1px solid #4a4a4a;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: #777777;
+}
+
+.chip.selected {
+  background: #3aa7ff;
+  border-color: #3aa7ff;
+  color: #0b1c2b;
+  font-weight: 600;
+}
+
+/* Pre-add colors row inside the new-sandbox overlay */
+.mini-tray {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 48px;
+  padding: 8px;
+  background: #1e1e1e;
+  border-radius: 8px;
+}
+
+.mini-tray .color-circle {
+  width: 32px;
+  height: 32px;
+}
+
+.mini-tray .add-circle {
+  font-size: 18px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* ---------- Upload picture ---------- */
+.upload-drop {
+  border: 2px dashed #4a4a4a;
+  border-radius: 8px;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #999999;
+  font-size: 14px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+
+.upload-drop:hover {
+  border-color: #777777;
+}
+
+.upload-drop img {
+  max-width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+}
+
+.pixelated {
+  image-rendering: pixelated;
+}
+
+/* Numbered (color-by-numbers) tray circles */
+.color-circle.numbered {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.select {
+  background: #1e1e1e;
+  color: #eeeeee;
+  border: 1px solid #4a4a4a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.text-input {
+  background: #1e1e1e;
+  color: #eeeeee;
+  border: 1px solid #4a4a4a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: #3aa7ff;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 600px) {
+  .top-bar {
+    padding: 12px 14px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .top-bar h1 {
+    font-size: 16px;
+  }
+
+  .top-actions {
+    gap: 6px;
+  }
+
+  .btn {
+    padding: 9px 12px;
+    font-size: 14px;
+  }
+
+  .project-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .new-card {
+    min-height: 0;
+  }
+
+  .modal {
+    padding: 20px;
+  }
+
+  .color-tray {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .color-circle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .selector-box {
+    left: 14px;
+    bottom: 76px;
+  }
+
+  /* Prevent iOS auto-zoom when focusing text inputs */
+  .text-input,
+  .select {
+    font-size: 16px;
+  }
+}
+
+/* ---------- Color options menu ---------- */
+.color-menu {
+  align-items: stretch;
+  text-align: center;
+}
+
+.menu-swatch {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  margin: 0 auto;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.menu-color-value {
+  margin: 4px 0 12px;
+  font-size: 13px;
+  color: #bbbbbb;
+  font-family: ui-monospace, monospace;
+}
+
+.color-menu .btn {
+  margin-top: 8px;
+}
+
+/* Keeps native color inputs in the DOM but out of sight,
+   so we can still open the picker programmatically. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

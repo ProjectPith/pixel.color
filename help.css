@@ -1,0 +1,42 @@
+/* Help button in the top bar */
+.help-btn {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #4a4a4a;
+  background: #3a3a3a;
+  color: #eeeeee;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.help-btn:hover {
+  background: #4a4a4a;
+}
+
+/* Help modal content */
+.help-modal {
+  width: min(480px, 92vw);
+}
+
+.help-list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: #dddddd;
+}
+
+.help-modal p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #dddddd;
+}

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Color — Sandbox</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="help.css">
+</head>
+<body>
+  <header class="top-bar">
+    <button id="back-btn" class="btn back-btn">&larr; Back</button>
+    <h1 id="project-name">Sandbox</h1>
+    <div class="top-actions">
+      <button id="complete-btn" class="btn primary">Complete</button>
+      <button id="help-btn" class="help-btn" title="Help" aria-label="Help">?</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <canvas id="pixel-canvas" width="480" height="480"></canvas>
+  </main>
+
+  <footer class="color-tray" id="color-tray">
+    <button id="add-color-btn" class="color-circle add-circle" title="Add a color" aria-label="Add a color">+</button>
+  </footer>
+
+  <!-- Floating color selector box with a confirm checkmark -->
+  <div id="color-selector-box" class="selector-box hidden">
+    <input type="color" id="box-color-picker" class="box-picker" value="#3aa7ff" aria-label="Pick a color">
+    <button id="box-confirm-btn" class="confirm-btn" title="Add color" aria-label="Add color">&#10003;</button>
+  </div>
+
+  <!-- Color options overlay (appears when a color circle is held) -->
+  <div id="color-menu-overlay" class="overlay hidden">
+    <div class="modal color-menu">
+      <div class="menu-swatch" id="menu-swatch"></div>
+      <p class="menu-color-value" id="menu-color-value">#000000</p>
+      <button id="change-color-btn" class="btn">Change color</button>
+      <button id="delete-color-btn" class="btn danger">Delete color</button>
+      <button id="close-color-menu" class="btn">Cancel</button>
+      <input type="color" id="edit-picker" class="visually-hidden">
+    </div>
+  </div>
+
+  <!-- Completion overlay: save as PNG or delete; both remove the project -->
+  <div id="complete-overlay" class="overlay hidden">
+    <div class="modal">
+      <h2 id="complete-title">All done!</h2>
+      <p class="modal-label">Save the finished picture as a PNG, or delete it. Either way the project is removed from your device to save room.</p>
+      <div class="modal-actions">
+        <button id="complete-save-btn" class="btn primary">Save as PNG</button>
+        <button id="complete-delete-btn" class="btn danger">Delete</button>
+        <button id="complete-cancel-btn" class="btn">Keep painting</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="help.js"></script>
+  <script src="sandbox.js"></script>
+</body>
+</html>
