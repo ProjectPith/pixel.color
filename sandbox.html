@@ -26,8 +26,26 @@
 
   <footer class="color-tray" id="color-tray">
     <button id="add-color-btn" class="color-circle add-circle" title="Add a color" aria-label="Add a color">+</button>
-    <input type="color" id="color-picker" class="visually-hidden" value="#3aa7ff">
   </footer>
+
+  <!-- Custom shade picker (no presets) -->
+  <div id="shade-picker-overlay" class="overlay hidden">
+    <div class="modal picker-modal">
+      <h2 id="picker-title">Pick a color</h2>
+      <div id="sv-area" class="sv-area">
+        <div id="sv-cursor" class="sv-cursor"></div>
+      </div>
+      <input type="range" id="hue-slider" class="hue-slider" min="0" max="360" value="210" aria-label="Hue">
+      <div class="picker-row">
+        <span id="picker-preview" class="picker-preview"></span>
+        <input type="text" id="picker-hex" class="text-input picker-hex" value="#3aa7ff" maxlength="7" spellcheck="false">
+      </div>
+      <div class="modal-actions">
+        <button id="picker-cancel" class="btn">Cancel</button>
+        <button id="picker-ok" class="btn primary">Done</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Color options overlay (appears when a color circle is held) -->
   <div id="color-menu-overlay" class="overlay hidden">
@@ -37,7 +55,6 @@
       <button id="change-color-btn" class="btn">Change color</button>
       <button id="delete-color-btn" class="btn danger">Delete color</button>
       <button id="close-color-menu" class="btn">Cancel</button>
-      <input type="color" id="edit-picker" class="visually-hidden">
     </div>
   </div>
 
